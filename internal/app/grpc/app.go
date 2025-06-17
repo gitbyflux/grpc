@@ -6,6 +6,7 @@ import (
 	"net"
 
 	authgrpc "github.com/gitbyflux/grpcpractice/internal/grpc/auth"
+	"github.com/gitbyflux/grpcpractice/internal/lib/logger/sl"
 
 	"google.golang.org/grpc"
 )
@@ -16,10 +17,13 @@ type App struct {
 	port       int
 }
 
-func New(log *slog.Logger, port int) *App {
+func New(log *slog.Logger,
+	authService authgrpc.Auth,
+	port int,
+) *App {
 	gRPCServer := grpc.NewServer()
 
-	authgrpc.Register(gRPCServer)
+	authgrpc.Register(gRPCServer, authService)
 
 	return &App{
 		log:        log,
@@ -41,13 +45,13 @@ func (a *App) Run() error {
 
 	l, err := net.Listen("tcp", fmt.Sprintf(":%d", a.port))
 	if err != nil {
-		return fmt.Errorf("%s: %w", op, err)
+		return sl.Wrap(op, err)
 	}
 
 	log.Info("gRPC sever is running", slog.String("addr", l.Addr().String()))
 
 	if err := a.gRPCServer.Serve(l); err != nil {
-		return fmt.Errorf("%s: %w", op, err)
+		return sl.Wrap(op, err)
 	}
 
 	return nil
