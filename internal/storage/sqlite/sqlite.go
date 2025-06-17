@@ -16,9 +16,29 @@ type Storage struct {
 	db *sql.DB
 }
 
-// App implements auth.AppProvider.
-func (s *Storage) App(ctx context.Context, appID int) (models.App, error) {
-	panic("unimplemented")
+func (s *Storage) App(ctx context.Context,
+	appID int,
+) (models.App, error) {
+	const op = "storage.sqlite.App"
+
+	stmt, err := s.db.Prepare("SELECT id, name, secret FROM apps WHERE id = ?")
+	if err != nil {
+		return models.App{}, sl.WrapMsg(op, "prepare statement", err)
+	}
+
+	row := stmt.QueryRowContext(ctx, appID)
+
+	var app models.App
+
+	err = row.Scan(&app.ID, &app.Name, &app.Secret)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return models.App{}, sl.WrapMsg(op, "execute statement", storage.ErrAppNotFound)
+		}
+		return models.App{}, sl.WrapMsg(op, "execute statement", err)
+	}
+
+	return app, nil
 }
 
 func New(storagePath string) (*Storage, error) {
