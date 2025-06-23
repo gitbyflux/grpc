@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/ilyakaznacheev/cleanenv"
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -46,11 +47,15 @@ func MustLoadPath(configPath string) *Config {
 func fetchConfigPath() string {
 	var res string
 
-	// --config="path/to/config.yaml"
+	// --config="./config/local.yaml"
 	flag.StringVar(&res, "config", "", "path to config file")
 	flag.Parse()
 
 	if res == "" {
+		err := godotenv.Load()
+		if err != nil {
+			panic("don't load godotenv")
+		}
 		res = os.Getenv("CONFIG_PATH")
 	}
 
