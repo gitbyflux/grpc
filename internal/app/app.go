@@ -6,7 +6,7 @@ import (
 
 	grpcapp "github.com/gitbyflux/grpcpractice/internal/app/grpc"
 	"github.com/gitbyflux/grpcpractice/internal/services/auth"
-	"github.com/gitbyflux/grpcpractice/internal/storage/sqlite"
+	"github.com/gitbyflux/grpcpractice/internal/storage/psql"
 )
 
 type App struct {
@@ -16,10 +16,11 @@ type App struct {
 func New(
 	log *slog.Logger,
 	grpcPort int,
-	storagePath string,
+	dsn string,
 	tokenTTL time.Duration,
 ) *App {
-	storage, err := sqlite.New(storagePath)
+	//storage, err := sqlite.New(storagePath)
+	storage, err := psql.New(dsn)
 	if err != nil {
 		panic(err)
 	}
